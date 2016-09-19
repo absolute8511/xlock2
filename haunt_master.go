@@ -195,6 +195,14 @@ func (self *EtcdLock) acquire() (ret error) {
 
 	var rsp *client.Response
 	err := fmt.Errorf("Dummy error.")
+	
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		select {
+		case <-self.watchStopChan:
+			cancel()
+		}
+	}()
 
 	for {
 		if !self.enable {
@@ -235,15 +243,13 @@ func (self *EtcdLock) acquire() (ret error) {
 			preIdx = rsp.Index + 1
 		}
 		watcher := self.client.Watch(self.name, preIdx, false)
-		//go func() {
-		//	select {
-		//	case <-self.watchStopChan:
-		//		cancel()
-		//	}
-		//}()
-		rsp, err = watcher.Next(context.Background())
+		rsp, err = watcher.Next(ctx)
 		if err != nil {
-			logger.Errorf("[EtcdLock][acquire] failed to watch lock[%s] error: %s", self.name, err.Error())
+			if err == context.Canceled {
+				logger.Infof("[EtcdLock][acquire] watch lock[%s] stop by user.", self.name)
+			} else {
+				logger.Errorf("[EtcdLock][acquire] failed to watch lock[%s] error: %s", self.name, err.Error())
+			}
 		}
 	}
 
