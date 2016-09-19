@@ -85,7 +85,7 @@ func NewMaster(etcdClient *EtcdClient, name, value string, ttl uint64) Master {
 }
 
 func (self *EtcdLock) Start() {
-	logger.Infof("[EtcdLock][Start] start to acquire lock[%s].", self.name)
+	logger.Infof("[EtcdLock][Start] start to acquire lock[%s] value[%s].", self.name, self.id)
 	self.Lock()
 	if self.enable {
 		self.Unlock()
