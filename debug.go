@@ -5,8 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"strings"
-
-	"github.com/coreos/go-etcd/etcd"
 )
 
 const (
@@ -20,9 +18,6 @@ var logger *lockLogger
 
 func SetLogger(l *log.Logger, level int) {
 	logger = &lockLogger{log: l, level: level}
-	if level >= LOG_DEBUG {
-		etcd.SetLogger(l)
-	}
 }
 
 type lockLogger struct {
