@@ -97,8 +97,6 @@ func (self *EtcdClient) CompareAndSwap(key string, value string, ttl uint64, pre
 		PrevValue: prevValue,
 		PrevIndex: prevIndex,
 		TTL:       time.Duration(ttl) * time.Second,
-		Refresh:   true,
-		PrevExist: client.PrevExist,
 	}
 	return self.kapi.Set(context.Background(), key, value, setOptions)
 }
