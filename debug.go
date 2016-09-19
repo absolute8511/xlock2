@@ -2,8 +2,6 @@ package haunt_lock
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"strings"
 )
 
@@ -14,54 +12,75 @@ const (
 	LOG_DEBUG
 )
 
+type Logger interface {
+	Output(maxdepth int, s string) error
+	OutputErr(maxdepth int, s string) error
+	OutputWarning(maxdepth int, s string) error
+}
+
 var logger *lockLogger
 
-func SetLogger(l *log.Logger, level int) {
+func SetLogger(l Logger, level int) {
 	logger = &lockLogger{log: l, level: level}
 }
 
 type lockLogger struct {
-	log   *log.Logger
+	log   Logger
 	level int
 }
 
 func (p *lockLogger) Info(args ...interface{}) {
+	if p.log == nil {
+		return
+	}
 	if p.level >= LOG_INFO {
 		msg := "INFO: " + fmt.Sprint(args...)
-		p.log.Println(msg)
+		p.log.Output(2, msg)
 	}
 }
 
 func (p *lockLogger) Infof(f string, args ...interface{}) {
+	if p.log == nil {
+		return
+	}
+
 	if p.level >= LOG_INFO {
 		msg := "INFO: " + fmt.Sprintf(f, args...)
 		// Append newline if necessary
 		if !strings.HasSuffix(msg, "\n") {
 			msg = msg + "\n"
 		}
-		p.log.Print(msg)
+		p.log.Output(2, msg)
 	}
 }
 
 func (p *lockLogger) Error(args ...interface{}) {
+	if p.log == nil {
+		return
+	}
+
 	if p.level >= LOG_INFO {
 		msg := "ERROR: " + fmt.Sprint(args...)
-		p.log.Println(msg)
+		p.log.OutputErr(2, msg)
 	}
 }
 
 func (p *lockLogger) Errorf(f string, args ...interface{}) {
+	if p.log == nil {
+		return
+	}
+
 	if p.level >= LOG_INFO {
 		msg := "ERROR: " + fmt.Sprintf(f, args...)
 		// Append newline if necessary
 		if !strings.HasSuffix(msg, "\n") {
 			msg = msg + "\n"
 		}
-		p.log.Print(msg)
+		p.log.OutputErr(2, msg)
 	}
 }
 
 func init() {
 	// Default logger uses the go default log.
-	SetLogger(log.New(ioutil.Discard, "go-x-lock", log.LstdFlags), LOG_DEBUG)
+	SetLogger(nil, LOG_INFO)
 }
