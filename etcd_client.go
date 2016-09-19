@@ -93,15 +93,12 @@ func (self *EtcdClient) Update(key string, value string, ttl uint64) (*client.Re
 }
 
 func (self *EtcdClient) CompareAndSwap(key string, value string, ttl uint64, prevValue string, prevIndex uint64) (*client.Response, error) {
-	refresh := false
-	if ttl > 0 {
-		refresh = true
-	}
 	setOptions := &client.SetOptions{
 		PrevValue: prevValue,
 		PrevIndex: prevIndex,
 		TTL:       time.Duration(ttl) * time.Second,
-		Refresh:   refresh,
+		Refresh:   true,
+		PrevExist: client.PrevExist,
 	}
 	return self.kapi.Set(context.Background(), key, value, setOptions)
 }
