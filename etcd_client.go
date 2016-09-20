@@ -42,7 +42,11 @@ func (self *EtcdClient) Get(key string, sort, recursive bool) (*client.Response,
 }
 
 func (self *EtcdClient) Create(key string, value string, ttl uint64) (*client.Response, error) {
-	return self.kapi.Create(context.Background(), key, value)
+	setOptions := &client.SetOptions{
+		TTL:       time.Duration(ttl) * time.Second,
+		PrevExist: client.PrevNoExist,
+	}
+	return self.kapi.Set(context.Background(), key, value, setOptions)
 }
 
 func (self *EtcdClient) Delete(key string, recursive bool) (*client.Response, error) {
@@ -90,16 +94,6 @@ func (self *EtcdClient) Update(key string, value string, ttl uint64) (*client.Re
 		PrevExist: client.PrevExist,
 	}
 	return self.kapi.Set(context.Background(), key, value, setOptions)
-}
-
-func (self *EtcdClient) CompareIndexAndSwap(key string, ttl uint64, prevIndex uint64) (*client.Response, error) {
-	setOptions := &client.SetOptions{
-		PrevIndex: prevIndex,
-		TTL:       time.Duration(ttl) * time.Second,
-		Refresh:   true,
-		PrevExist: client.PrevExist,
-	}
-	return self.kapi.Set(context.Background(), key, "", setOptions)
 }
 
 func (self *EtcdClient) CompareAndSwap(key string, value string, ttl uint64, prevValue string, prevIndex uint64) (*client.Response, error) {

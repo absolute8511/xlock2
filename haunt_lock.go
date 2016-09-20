@@ -151,12 +151,13 @@ func (self *SeizeLock) refresh() {
 			logger.Infof("Stopping seize lock[%s] refresh.", self.name)
 			return
 		case <-time.After(time.Second * time.Duration(self.ttl*4/10)):
-			if rsp, err := self.client.CompareIndexAndSwap(self.name, self.ttl, self.modifiedIndex); err != nil {
+			if rsp, err := self.client.CompareAndSwap(self.name, self.value, self.ttl, self.value, self.modifiedIndex); err != nil {
 				if !IsEtcdNotReachable(err) {
 					// if ! not reachable, maybe value changed, return.
 					logger.Errorf("seize lock[%s] error: %s.", self.name, err.Error())
 					return
 				}
+				logger.Errorf("[maybe not reachable]seize lock[%s] error: %s.", self.name, err.Error())
 			} else {
 				self.modifiedIndex = rsp.Node.ModifiedIndex
 			}
