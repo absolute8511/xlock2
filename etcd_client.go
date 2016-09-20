@@ -92,6 +92,16 @@ func (self *EtcdClient) Update(key string, value string, ttl uint64) (*client.Re
 	return self.kapi.Set(context.Background(), key, value, setOptions)
 }
 
+func (self *EtcdClient) CompareIndexAndSwap(key string, ttl uint64, prevIndex uint64) (*client.Response, error) {
+	setOptions := &client.SetOptions{
+		PrevIndex: prevIndex,
+		TTL:       time.Duration(ttl) * time.Second,
+		Refresh:   true,
+		PrevExist: client.PrevExist,
+	}
+	return self.kapi.Set(context.Background(), key, "", setOptions)
+}
+
 func (self *EtcdClient) CompareAndSwap(key string, value string, ttl uint64, prevValue string, prevIndex uint64) (*client.Response, error) {
 	setOptions := &client.SetOptions{
 		PrevValue: prevValue,
