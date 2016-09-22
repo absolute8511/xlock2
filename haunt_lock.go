@@ -300,7 +300,18 @@ func (self *HauntTimingRWLock) waitLock() error {
 				return nil
 			} else {
 				logger.Errorf("[HauntTimingRWLock][waitLock] watcher key[%s] error: %s", self.name, err.Error())
-				time.Sleep(5 * time.Second)
+				//rewatch
+				if IsEtcdWatchExpired(err) {
+					rsp, err = self.client.Get(self.name, false, true)
+					if err != nil {
+						logger.Errorf("[watchTopics] rewatch and get key[%s] error: %s", self.name, err.Error())
+						continue
+					}
+					watcher = self.client.Watch(self.name, rsp.Index+1, true)
+					continue
+				} else {
+					time.Sleep(5 * time.Second)
+				}
 			}
 			continue
 		}

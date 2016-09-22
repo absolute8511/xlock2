@@ -50,6 +50,19 @@ func IsEtcdNotReachable(err error) bool {
 	return false
 }
 
+func IsEtcdWatchExpired(err error) bool {
+	return isEtcdErrorNum(err, client.ErrorCodeEventIndexCleared)
+}
+
+func isEtcdErrorNum(err error, errorCode int) bool {
+	if err != nil {
+		if etcdError, ok := err.(client.Error); ok {
+			return etcdError.Code == errorCode
+		}
+	}
+	return false
+}
+
 func GetMasterDir() string {
 	return HAUNT_MASTER_DIR
 }
