@@ -232,8 +232,8 @@ func (self *EtcdLock) acquire() (ret error) {
 
 		self.Lock()
 		self.master = rsp.Node.Value
-		self.Unlock()
 		self.modifiedIndex = rsp.Node.ModifiedIndex
+		self.Unlock()
 
 		var preIdx uint64
 		// TODO: maybe change with etcd change
@@ -301,11 +301,16 @@ func (self *EtcdLock) refresh() {
 			logger.Infof("[EtcdLock][refresh] Stopping refresh for lock %s", self.name)
 			return
 		case <-time.After(time.Second * time.Duration(self.ttl*4/10)):
-			rsp, err := self.client.CompareAndSwap(self.name, self.id, self.ttl, self.id, self.modifiedIndex)
+			self.Lock()
+			modify := self.modifiedIndex
+			self.Unlock()
+			rsp, err := self.client.CompareAndSwap(self.name, self.id, self.ttl, self.id, modify)
 			if err != nil {
 				logger.Errorf("[EtcdLock][refresh] Failed to set ttl for lock[%s] error:%s", self.name, err.Error())
 			} else {
+				self.Lock()
 				self.modifiedIndex = rsp.Node.ModifiedIndex
+				self.Unlock()
 			}
 		}
 	}
